@@ -35,9 +35,3 @@ Further you can check your device compatibility and versions from [here](https:/
 
 you can use "onnx_img_video_inference.ipynb" which will help you under required input and output tensor shape to get inference results on your test data.
 you can also refere to this [jupyter notebook ](https://github.com/onnx/tensorflow-onnx/blob/master/tutorials/ConvertingSSDMobilenetToONNX.ipynb)
-
-
-
-
-
-https://github.com/onnx/tutorials
