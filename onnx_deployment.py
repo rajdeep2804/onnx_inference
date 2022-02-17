@@ -15,10 +15,10 @@ CWD_PATH = os.getcwd()
 class Stop_sign_onnx():
     
     
-    def __init__(self, onnx_path, stop_and_speed_limit_classes):
+    def __init__(self, classes):
         
         self.sess = rt.InferenceSession(onnx_path)
-        self.stop_and_speed_limit_classes = stop_and_speed_limit_classes
+        self.classes = classes
         self.threshold = 0.5
         
     def sess_run(self, img_data, sess):
@@ -49,15 +49,8 @@ class Stop_sign_onnx():
         label = self.stop_and_speed_limit_classes[c[0]]
         label1 = label+" : "+str(s)
         print('objects : ', label1)
-        print('---\\\\-----detected_sign_frame---\\\\-----',frame_number)
+        print('-----detected_sign_frame---',frame_number)
         pixel_location = [left, top, right, bottom]
-        frame_number = str(frame_number)
-        frame_number = frame_number.replace(" ", "T")
-        if frame_number[-9:] == "000+00:00":
-            frame_number = frame_number[:-9]+'z'
-            
-        else:
-            frame_number = frame_number[:-6]+'.000z'
         
         entry = {
                   "timestampe" : frame_number,
@@ -68,7 +61,6 @@ class Stop_sign_onnx():
 
                         },
                     ]}
-        #outfile = open('myfile.json', "a")
         with open(json_name, 'a', encoding='utf-8') as f:
             json.dump(entry, f)
 
@@ -126,24 +118,24 @@ class Stop_sign_onnx():
         total_number_of_frames = int(cv2.VideoCapture.get(cap, property_id))
         print('--total_number_of_frames--', total_number_of_frames)
         json_name = video_name[:-4]+'.json'
-        print('----------json------', json_name)
+        print('---json---', json_name)
 
         output_path = output_video_dir + '/output_'+video_name
         print('output_path :', output_path)
         if debug == True:
             out = cv2.VideoWriter(output_path, cv2.VideoWriter_fourcc(*"mp4v"), 30, (frame_width, frame_height))
-        utc_clock = pd.Timestamp(timestamp_str, tz='utc')
-        milliseconds_delta = pd.Timedelta(100, unit='milli')
+        
+        
         while (cap.isOpened()):
             ret, img = cap.read()
             if not ret: break
             frame_number = cap.get(cv2.CAP_PROP_POS_FRAMES)
             print('--frame_number--',frame_number)
-            utc_clock += milliseconds_delta
-            result = self._inference_(img, utc_clock, json_name, debug)
+        
+            result = self._inference_(img, frame_number, json_name, debug)
             if result:
                 c, d, s, img = result
-                self.json_dump(frame_width,frame_height, d, c, s, img, utc_clock, json_name, self.stop_and_speed_limit_classes)
+                self.json_dump(frame_width,frame_height, d, c, s, img, frame_number, json_name, self.classes)
                 if debug == True :
                     img = self.draw_detection(frame_width,frame_height,d, c, s, img)
                     out.write(img)
@@ -157,6 +149,6 @@ class Stop_sign_onnx():
 if __name__ == '__main__':
     
     
-    stop_and_speed_limit_classes = json.load(open(label_map_path))
+    classes = json.load(open(label_map_path))
     
-    onnx = stop_sign_onnx(onnx_path, stop_and_speed_limit_classes)
+    onnx = stop_sign_onnx(onnx_path, classes)
